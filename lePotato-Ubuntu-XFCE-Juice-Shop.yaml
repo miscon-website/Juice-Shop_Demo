@@ -1,0 +1,50 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+#    - name: Set password
+#      ansible.builtin.user:
+#        name: ubuntu
+#        password: '$y$j9T$lKWF4Pd3GlLkOpGc/8.Hc.$SJvRv9GEc1GGO5e0aR.VJUEpgHzzpvk/EbTu1hDr9w/'
+    - name: Ensure xfce4 is installed
+      apt: 
+        cache_valid_time: 7200
+        pkg:
+          - xfce4-session
+          - xfce4-goodies
+          - x11-apps
+          - xfce4-panel
+          - xinit
+        state: latest
+    - name: Create path for display file
+      ansible.builtin.file:
+        path: /home/ubuntu/.config/xfce4/xfconf/xfce-perchannel-xml
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+    - name: Set resolution
+      ansible.builtin.copy:
+        src: ./displays.xml
+        dest: /home/ubuntu/.config/xfce4/xfconf/xfce-perchannel-xml/displays.xml
+        owner: ubuntu
+        group: ubuntu
+    - name: Ensure docker is installed
+      apt: name=docker.io state=present
+    - name: Ensure chromium is installed
+      snap: name=chromium state=present
+    - name: Run Juice-Shop
+      command: 'docker run -p 3000:3000 --restart always -d --name "Juice-shop" bkimminich/juice-shop'
+      ignore_errors: True
+    - name: Copy .bash_profile
+      ansible.builtin.copy:
+        src: ./.bash_profile
+        dest: /home/ubuntu/.bash_profile
+        owner: ubuntu
+        group: ubuntu
+#      docker_container:
+#        name: juice-shop
+#        state: present
+#        image: bkimminich/juice-shop
+#        restart_policy: always
+#        ports:
+#          - "3000:3000"
